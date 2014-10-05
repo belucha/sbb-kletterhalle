@@ -7,46 +7,51 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     // ****************************************************************
-    // ** STATE MACHINE CREATION **************************************
+    // ** DOOR STATE MACHINE CREATION *********************************
     // ****************************************************************
-    // create timer for unlocked state
-    this->tUnlocked = new QTimer(this);
-    this->tUnlocked->setInterval(5000);
-    this->tUnlocked->setSingleShot(true);
+    // create timer for unlocked state, this timer is started, when a ticket is available but not used
+    this->tDoorUnlocked = new QTimer(this);
+    this->tDoorUnlocked->setInterval(5000);
+    this->tDoorUnlocked->setSingleShot(true);
     // create state machine
-    this->smDoor = new QStateMachine(this);
+    this->sDoorMachine = new QStateMachine(this);
     // create and add states
-    this->smDoor->addState(this->sBlocked = new QState(this->smDoor));
-    this->smDoor->addState(this->sAlarm = new QState(this->smDoor));
-    this->smDoor->addState(this->sUnlocked = new QState(this->smDoor));
-    this->smDoor->addState(this->sEntry = new QState(this->smDoor));
+    this->sDoorBlocked = new QState(this->sDoorMachine);
+    this->sDoorAlarm = new QState(this->sDoorMachine);
+    this->sDoorUnlocked = new QState(this->sDoorMachine);
+    this->sDoorEntry = new QState(this->sDoorMachine);
     // show state
-    this->sBlocked->assignProperty(this->ui->labelState, "text", "door is blocked");
-    this->sUnlocked->assignProperty(this->ui->labelState, "text", "door is free");
-    this->sAlarm->assignProperty(this->ui->labelState, "text", "alarm");
-    this->sEntry->assignProperty(this->ui->labelState, "text", "entry");
+    this->sDoorBlocked->assignProperty(this->ui->labelState, "text", "door is blocked");
+    this->sDoorUnlocked->assignProperty(this->ui->labelState, "text", "door is free");
+    this->sDoorAlarm->assignProperty(this->ui->labelState, "text", "alarm");
+    this->sDoorEntry->assignProperty(this->ui->labelState, "text", "entry");
     // count alarms and entries
-    connect(this->sAlarm, SIGNAL(entered()), this->ui->spinBoxAlarms, SLOT(stepUp()));
-    connect(this->sEntry, SIGNAL(entered()), this->ui->spinBoxEntries, SLOT(stepUp()));
+    connect(this->sDoorAlarm, SIGNAL(entered()), this->ui->spinBoxAlarms, SLOT(stepUp()));
+    connect(this->sDoorEntry, SIGNAL(entered()), this->ui->spinBoxEntries, SLOT(stepUp()));
     // add transitions
-    this->sBlocked->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sUnlocked);
-    this->sBlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sAlarm);
-    this->sUnlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sEntry);
-    this->sUnlocked->addTransition(this->tUnlocked, SIGNAL(timeout()), sBlocked);
-    this->sAlarm->addTransition(this->sBlocked);
-    this->sEntry->addTransition(this->sBlocked);
+    this->sDoorBlocked->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sDoorUnlocked);
+    this->sDoorBlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorAlarm);
+    this->sDoorUnlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorEntry);
+    this->sDoorUnlocked->addTransition(this->tDoorUnlocked, SIGNAL(timeout()), sDoorBlocked);
+    this->sDoorAlarm->addTransition(this->sDoorBlocked);
+    this->sDoorEntry->addTransition(this->sDoorBlocked);
     // timer control
-    connect(this->sUnlocked, SIGNAL(entered()), this->tUnlocked, SLOT(start()));
-    connect(this->sUnlocked, SIGNAL(exited()), this->tUnlocked, SLOT(stop()));
+    connect(this->sDoorUnlocked, SIGNAL(entered()), this->tDoorUnlocked, SLOT(start()));
+    connect(this->sDoorUnlocked, SIGNAL(exited()), this->tDoorUnlocked, SLOT(stop()));
     // set inital state
-    this->smDoor->setInitialState(this->sBlocked);
+    this->sDoorMachine->setInitialState(this->sDoorBlocked);
     // and start machine
-    this->smDoor->start();
+    this->sDoorMachine->start();
 
 
     // ****************************************************************
-    // ** STATE MACHINE CREATION **************************************
+    // ** SCANNER STATE MACHINE CREATION ******************************
     // ****************************************************************
+}
+
+void MainWindow::keyReleaseEvent ( QKeyEvent * event )
+{
+    QMainWindow::keyReleaseEvent(event);
 }
 
 MainWindow::~MainWindow()
