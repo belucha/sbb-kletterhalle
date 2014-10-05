@@ -5,6 +5,7 @@
 #include <QStateMachine>
 #include <QState>
 #include <QTimer>
+#include <QtNetwork/QNetworkRequest>
 
 namespace Ui {
 class MainWindow;

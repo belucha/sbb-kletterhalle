@@ -6,6 +6,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    // ****************************************************************
+    // ** STATE MACHINE CREATION **************************************
+    // ****************************************************************
     // create timer for unlocked state
     this->tUnlocked = new QTimer(this);
     this->tUnlocked->setInterval(5000);
@@ -39,6 +42,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->smDoor->setInitialState(this->sBlocked);
     // and start machine
     this->smDoor->start();
+
+
+    // ****************************************************************
+    // ** STATE MACHINE CREATION **************************************
+    // ****************************************************************
 }
 
 MainWindow::~MainWindow()
