@@ -16,9 +16,19 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="labelState">
+     <widget class="QLabel" name="labelStateDoor">
       <property name="text">
-       <string>State</string>
+       <string>Door State</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelStateScanner">
+      <property name="text">
+       <string>Scanner State</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>

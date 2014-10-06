@@ -7,39 +7,73 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     // ****************************************************************
+    // ** SCANNER STATE MACHINE CREATION ******************************
+    // ****************************************************************
+    this->sSMachine = new QStateMachine(this);
+    this->sSEntryWaitForCode = new QState(this->sSMachine);
+    this->sSInfoWaitForCode  = new QState(this->sSMachine);
+    this->sSInfoRequest = new QState(this->sSMachine);
+    this->sSInfoResponse = new QState(this->sSMachine);
+    this->sSInfoShow = new QState(this->sSMachine);
+    this->sSRequestError = new QState(this->sSMachine);
+    this->sSEntryRequest = new QState(this->sSMachine);
+    this->sSEntryResponse = new QState(this->sSMachine);
+    this->sSEntryBusy = new QState(this->sSMachine);
+    this->sSRestart = new QState(this->sSMachine);
+
+    // ****************************************************************
     // ** DOOR STATE MACHINE CREATION *********************************
     // ****************************************************************
-    // create state machine
     this->sDoorMachine = new QStateMachine(this);
-    // create and add states
     this->sDoorBlocked = new QState(this->sDoorMachine);
     this->sDoorAlarm = new QState(this->sDoorMachine);
     this->sDoorUnlocked = new QState(this->sDoorMachine);
     this->sDoorEntry = new QState(this->sDoorMachine);
-    // show state
-    this->sDoorBlocked->assignProperty(this->ui->labelState, "text", "door is blocked");
-    this->sDoorUnlocked->assignProperty(this->ui->labelState, "text", "door is free");
-    this->sDoorAlarm->assignProperty(this->ui->labelState, "text", "alarm");
-    this->sDoorEntry->assignProperty(this->ui->labelState, "text", "entry");
-    // count alarms and entries
-    connect(this->sDoorAlarm, SIGNAL(entered()), this->ui->spinBoxAlarms, SLOT(stepUp()));
-    connect(this->sDoorEntry, SIGNAL(entered()), this->ui->spinBoxEntries, SLOT(stepUp()));
+
     // add transitions
-    this->sDoorBlocked->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sDoorUnlocked);
+    this->sDoorBlocked->addTransition(this->sSEntryResponse, SIGNAL(entered()), this->sDoorUnlocked);
     this->sDoorBlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorAlarm);
     this->sDoorUnlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorEntry);
     addTimeoutTransition(this->sDoorUnlocked, 5000, sDoorBlocked);
     this->sDoorAlarm->addTransition(this->sDoorBlocked);
     this->sDoorEntry->addTransition(this->sDoorBlocked);
-    // set inital state
+
+    this->sSEntryWaitForCode->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSEntryRequest);
+    addTimeoutTransition(this->sSEntryRequest, 150, this->sSEntryResponse); // TODO: exchange by real json request
+    this->sSEntryResponse->addTransition(this->sDoorUnlocked, SIGNAL(exited()), this->sSRestart);
+    this->sSEntryResponse->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSEntryBusy);
+    this->sSEntryBusy->addTransition(this->sDoorUnlocked, SIGNAL(exited()), this->sSRestart);
+    addTimeoutTransition(this->sSEntryBusy, 1500, this->sSEntryResponse);   // show busy message for 1.5seconds
+    this->sSRestart->addTransition(this->sSEntryWaitForCode);
+
+
+    // show states
+    this->sDoorBlocked->assignProperty(this->ui->labelStateDoor, "text", "door is blocked");
+    this->sDoorUnlocked->assignProperty(this->ui->labelStateDoor, "text", "door is free");
+    this->sDoorAlarm->assignProperty(this->ui->labelStateDoor, "text", "alarm");
+    this->sDoorEntry->assignProperty(this->ui->labelStateDoor, "text", "entry");
+
+
+    this->sSEntryWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "Please show your ticket!");
+    this->sSInfoWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "info: Please show your ticket");
+    this->sSInfoRequest->assignProperty(this->ui->labelStateScanner, "text",  "info: request");
+    this->sSInfoResponse->assignProperty(this->ui->labelStateScanner, "text",  "info: waiting for server response");
+    this->sSInfoShow->assignProperty(this->ui->labelStateScanner, "text",  "info: your ticket is valid until");
+    this->sSRequestError->assignProperty(this->ui->labelStateScanner, "text",  "request error, repeat");
+    this->sSEntryRequest->assignProperty(this->ui->labelStateScanner, "text",  "waiting for server response");
+    this->sSEntryResponse->assignProperty(this->ui->labelStateScanner, "text",  "you are allowed, please enter");
+    this->sSEntryBusy->assignProperty(this->ui->labelStateScanner, "text",  "busy please wait");
+    this->sSRestart->assignProperty(this->ui->labelStateScanner, "text",  "restart");
+
+    connect(this->sDoorAlarm, SIGNAL(entered()), this->ui->spinBoxAlarms, SLOT(stepUp()));
+    connect(this->sDoorEntry, SIGNAL(entered()), this->ui->spinBoxEntries, SLOT(stepUp()));
+
+
+    // set inital states & and start machines
+    this->sSMachine->setInitialState(this->sSEntryWaitForCode);
     this->sDoorMachine->setInitialState(this->sDoorBlocked);
-    // and start machine
+    this->sSMachine->start();
     this->sDoorMachine->start();
-
-
-    // ****************************************************************
-    // ** SCANNER STATE MACHINE CREATION ******************************
-    // ****************************************************************
 }
 
 void MainWindow::keyReleaseEvent ( QKeyEvent * event )

@@ -30,6 +30,10 @@ private:
     QState* sDoorAlarm;
     QState* sDoorEntry;
     QState* sDoorUnlocked;
+    // scanner state machine releated objects
+    QStateMachine* sSMachine;
+    QState *sSEntryWaitForCode, *sSInfoWaitForCode, *sSInfoRequest, *sSInfoResponse,
+           *sSInfoShow, *sSRequestError, *sSEntryRequest, *sSEntryResponse, *sSEntryBusy, *sSRestart;
 };
 
 #endif // MAINWINDOW_H
