@@ -29,16 +29,28 @@ MainWindow::MainWindow(QWidget *parent) :
     this->sDoorAlarm = new QState(this->sDoorMachine);
     this->sDoorUnlocked = new QState(this->sDoorMachine);
     this->sDoorEntry = new QState(this->sDoorMachine);
+    this->sDoorTicketUnused = new QState(this->sDoorMachine);
 
-    // add transitions
+    // ****************************************************************
+    // ** DEFINE ALL POSSIBLE TRANSITIONS *****************************
+    // ****************************************************************
     this->sDoorBlocked->addTransition(this->sSEntryResponse, SIGNAL(entered()), this->sDoorUnlocked);
     this->sDoorBlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorAlarm);
     this->sDoorUnlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorEntry);
-    addTimeoutTransition(this->sDoorUnlocked, 5000, sDoorBlocked);
+    addTimeoutTransition(this->sDoorUnlocked, 5000, this->sDoorTicketUnused);
     this->sDoorAlarm->addTransition(this->sDoorBlocked);
     this->sDoorEntry->addTransition(this->sDoorBlocked);
+    this->sDoorTicketUnused->addTransition(this->sDoorBlocked);
 
     this->sSEntryWaitForCode->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSEntryRequest);
+    this->sSEntryWaitForCode->addTransition(this->ui->pushButtonInfo, SIGNAL(clicked()), this->sSInfoWaitForCode);
+    this->sSInfoWaitForCode->addTransition(this->ui->pushButtonInfo, SIGNAL(clicked()), this->sSEntryWaitForCode);
+    addTimeoutTransition(this->sSInfoWaitForCode, 5000, this->sSEntryWaitForCode);
+    this->sSInfoWaitForCode->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSInfoRequest);
+    addTimeoutTransition(this->sSInfoRequest, 150, this->sSInfoShow);
+    addTimeoutTransition(this->sSInfoShow, 5000, this->sSEntryWaitForCode);
+    this->sSInfoShow->addTransition(this->ui->pushButtonInfo, SIGNAL(clicked()), this->sSEntryWaitForCode);
+
     addTimeoutTransition(this->sSEntryRequest, 150, this->sSEntryResponse); // TODO: exchange by real json request
     this->sSEntryResponse->addTransition(this->sDoorUnlocked, SIGNAL(exited()), this->sSRestart);
     this->sSEntryResponse->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSEntryBusy);
@@ -46,13 +58,14 @@ MainWindow::MainWindow(QWidget *parent) :
     addTimeoutTransition(this->sSEntryBusy, 1500, this->sSEntryResponse);   // show busy message for 1.5seconds
     this->sSRestart->addTransition(this->sSEntryWaitForCode);
 
-
-    // show states
+    // ****************************************************************
+    // ** SHOW STATES AND ANIMATE PROPERTIES **************************
+    // ****************************************************************
     this->sDoorBlocked->assignProperty(this->ui->labelStateDoor, "text", "door is blocked");
     this->sDoorUnlocked->assignProperty(this->ui->labelStateDoor, "text", "door is free");
     this->sDoorAlarm->assignProperty(this->ui->labelStateDoor, "text", "alarm");
     this->sDoorEntry->assignProperty(this->ui->labelStateDoor, "text", "entry");
-
+    this->sDoorTicketUnused->assignProperty(this->ui->labelStateDoor, "text", "ticket was not used!");
 
     this->sSEntryWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "Please show your ticket!");
     this->sSInfoWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "info: Please show your ticket");
@@ -65,20 +78,20 @@ MainWindow::MainWindow(QWidget *parent) :
     this->sSEntryBusy->assignProperty(this->ui->labelStateScanner, "text",  "busy please wait");
     this->sSRestart->assignProperty(this->ui->labelStateScanner, "text",  "restart");
 
+    // ****************************************************************
+    // ** COUNT SOME EVENTS *******************************************
+    // ****************************************************************
     connect(this->sDoorAlarm, SIGNAL(entered()), this->ui->spinBoxAlarms, SLOT(stepUp()));
     connect(this->sDoorEntry, SIGNAL(entered()), this->ui->spinBoxEntries, SLOT(stepUp()));
+    connect(this->sDoorTicketUnused, SIGNAL(entered()), this->ui->spinBoxUnused, SLOT(stepUp()));
 
-
-    // set inital states & and start machines
+    // ****************************************************************
+    // ** SET INITAL STATES AND RUN THE STATE MACHINES ****************
+    // ****************************************************************
     this->sSMachine->setInitialState(this->sSEntryWaitForCode);
     this->sDoorMachine->setInitialState(this->sDoorBlocked);
     this->sSMachine->start();
     this->sDoorMachine->start();
-}
-
-void MainWindow::keyReleaseEvent ( QKeyEvent * event )
-{
-    QMainWindow::keyReleaseEvent(event);
 }
 
 MainWindow::~MainWindow()
@@ -86,6 +99,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//
+// Helper routine the adds a timeout transition between two states
+//
 QSignalTransition* MainWindow::addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState)
 {
     QTimer* timer = new QTimer(sourceState);

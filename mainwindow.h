@@ -16,8 +16,6 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-protected:
-    virtual void keyReleaseEvent ( QKeyEvent * event );
 public:
     explicit MainWindow(QWidget *parent = 0);
     static QSignalTransition* addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState);
@@ -30,10 +28,11 @@ private:
     QState* sDoorAlarm;
     QState* sDoorEntry;
     QState* sDoorUnlocked;
+    QState* sDoorTicketUnused;
     // scanner state machine releated objects
     QStateMachine* sSMachine;
-    QState *sSEntryWaitForCode, *sSInfoWaitForCode, *sSInfoRequest, *sSInfoResponse,
-           *sSInfoShow, *sSRequestError, *sSEntryRequest, *sSEntryResponse, *sSEntryBusy, *sSRestart;
+    QState *sSEntryWaitForCode, *sSInfoWaitForCode, *sSInfoRequest, *sSInfoResponse;
+    QState *sSInfoShow, *sSRequestError, *sSEntryRequest, *sSEntryResponse, *sSEntryBusy, *sSRestart;
 };
 
 #endif // MAINWINDOW_H

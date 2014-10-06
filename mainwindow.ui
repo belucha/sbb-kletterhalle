@@ -75,6 +75,24 @@
      </layout>
     </item>
     <item>
+     <layout class="QHBoxLayout" name="layoutUnused">
+      <item>
+       <widget class="QLabel" name="labelUnused">
+        <property name="text">
+         <string>Unused</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinBoxUnused">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <widget class="QPushButton" name="pushButtonTicket">
       <property name="text">
        <string>Ticket [F1]</string>
@@ -91,6 +109,16 @@
       </property>
       <property name="shortcut">
        <string>F2</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButtonInfo">
+      <property name="text">
+       <string>Show Info [F3]</string>
+      </property>
+      <property name="shortcut">
+       <string>F3</string>
       </property>
      </widget>
     </item>
