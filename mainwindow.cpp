@@ -9,10 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // ****************************************************************
     // ** DOOR STATE MACHINE CREATION *********************************
     // ****************************************************************
-    // create timer for unlocked state, this timer is started, when a ticket is available but not used
-    this->tDoorUnlocked = new QTimer(this);
-    this->tDoorUnlocked->setInterval(5000);
-    this->tDoorUnlocked->setSingleShot(true);
     // create state machine
     this->sDoorMachine = new QStateMachine(this);
     // create and add states
@@ -32,12 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     this->sDoorBlocked->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sDoorUnlocked);
     this->sDoorBlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorAlarm);
     this->sDoorUnlocked->addTransition(this->ui->pushButtonEntry, SIGNAL(clicked()), this->sDoorEntry);
-    this->sDoorUnlocked->addTransition(this->tDoorUnlocked, SIGNAL(timeout()), sDoorBlocked);
+    addTimeoutTransition(this->sDoorUnlocked, 5000, sDoorBlocked);
     this->sDoorAlarm->addTransition(this->sDoorBlocked);
     this->sDoorEntry->addTransition(this->sDoorBlocked);
-    // timer control
-    connect(this->sDoorUnlocked, SIGNAL(entered()), this->tDoorUnlocked, SLOT(start()));
-    connect(this->sDoorUnlocked, SIGNAL(exited()), this->tDoorUnlocked, SLOT(stop()));
     // set inital state
     this->sDoorMachine->setInitialState(this->sDoorBlocked);
     // and start machine
@@ -57,4 +50,14 @@ void MainWindow::keyReleaseEvent ( QKeyEvent * event )
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+QSignalTransition* MainWindow::addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState)
+{
+    QTimer* timer = new QTimer(sourceState);
+    timer->setInterval(msec);
+    timer->setSingleShot(true);
+    connect(sourceState, SIGNAL(entered()), timer, SLOT(start()));
+    connect(sourceState, SIGNAL(exited()), timer, SLOT(stop()));
+    return sourceState->addTransition(timer, SIGNAL(timeout()), destState);
 }

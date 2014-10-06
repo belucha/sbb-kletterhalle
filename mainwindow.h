@@ -20,6 +20,7 @@ protected:
     virtual void keyReleaseEvent ( QKeyEvent * event );
 public:
     explicit MainWindow(QWidget *parent = 0);
+    static QSignalTransition* addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState);
     ~MainWindow();
 private:
     Ui::MainWindow *ui;
@@ -29,13 +30,6 @@ private:
     QState* sDoorAlarm;
     QState* sDoorEntry;
     QState* sDoorUnlocked;
-    QTimer* tDoorUnlocked;
-    // scanner state machine related objects
-    QString* sScannerCode;
-    QStateMachine* sScannerMachine;
-    QState* sScannerReady;
-    QState* sScannerShowInfo;
-    QState* sScannerTicket;
 };
 
 #endif // MAINWINDOW_H
