@@ -6,8 +6,13 @@
 #include <QState>
 #include <QTimer>
 #include <QString>
+#include <QDebug>
 #include <QKeyEvent>
+#include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
+#include <QtNetwork/QSslConfiguration>
+#include <QtNetwork/QSslCertificate>
 
 namespace Ui {
 class MainWindow;
@@ -20,8 +25,13 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     static QSignalTransition* addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState);
     ~MainWindow();
+private slots:
+    void networkRequestFinished(QNetworkReply* reply);
+    void networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors);
 private:
     Ui::MainWindow *ui;
+    // network stuff
+    QNetworkAccessManager* manager;
     // door state machine releated objects
     QStateMachine* sDoorMachine;
     QState* sDoorBlocked;

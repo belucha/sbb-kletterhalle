@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/certificates">
+        <file>ca.raSpBBerry</file>
+        <file>client.raSpBBerry</file>
+        <file>client.raSpBBerry.pem</file>
+    </qresource>
+</RCC>

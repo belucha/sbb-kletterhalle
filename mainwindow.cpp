@@ -6,6 +6,39 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    // ****************************************************************
+    // ** ADD SERVER CA CERTIFICATE ***********************************
+    // ****************************************************************
+
+    QFile caCertFile(":/certificates/ca.raSpBBerry");
+    caCertFile.open(QIODevice::ReadOnly);
+    QSslCertificate caCertificate(caCertFile.readAll());
+//    QSslSocket::addDefaultCaCertificate(caCertificate);
+    caCertFile.close();
+
+    QFile clientCertFile(":/certificates/client.raSpBBerry");
+    clientCertFile.open(QIODevice::ReadOnly);
+    QSslCertificate clientCertificate(clientCertFile.readAll());
+    clientCertFile.close();
+
+    qDebug()<<caCertificate.issuerInfo(QSslCertificate::Organization);
+    qDebug()<<clientCertificate.issuerInfo(QSslCertificate::Organization);
+
+    // ****************************************************************
+    // ** SETUP NETWORK ACCES RESOURCES (SSL CONFIG) ******************
+    // ****************************************************************
+    this->manager = new QNetworkAccessManager(this);
+    connect(this->manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkRequestFinished(QNetworkReply*)));
+    connect(this->manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(networkRequestSslError(QNetworkReply*,QList<QSslError>)));
+//    QNetworkRequest request(QUrl("https://google.com"));
+    QNetworkRequest request(QUrl("https://pap10ds.spdns.de:8001/checkin/123445"));
+    request.sslConfiguration().setPeerVerifyMode(QSslSocket::VerifyNone);
+    request.sslConfiguration().caCertificates().append(caCertificate);
+    request.sslConfiguration().setLocalCertificate(clientCertificate);
+    request.sslConfiguration().setProtocol(QSsl::AnyProtocol);
+    this->manager->get(request);
+
     // ****************************************************************
     // ** SCANNER STATE MACHINE CREATION ******************************
     // ****************************************************************
@@ -97,6 +130,18 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::networkRequestFinished(QNetworkReply* reply)
+{
+    qDebug()<<QString(reply->readAll());
+    qDebug()<<reply->errorString();
+}
+
+void MainWindow::networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors)
+{
+    qDebug()<<QString(reply->readAll());
+    qDebug()<<errors;
 }
 
 //
