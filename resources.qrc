@@ -2,6 +2,6 @@
     <qresource prefix="/certificates">
         <file>ca.raSpBBerry</file>
         <file>client.raSpBBerry</file>
-        <file>client.raSpBBerry.pem</file>
+        <file>privkey.key</file>
     </qresource>
 </RCC>

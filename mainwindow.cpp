@@ -14,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QFile caCertFile(":/certificates/ca.raSpBBerry");
     caCertFile.open(QIODevice::ReadOnly);
     QSslCertificate caCertificate(caCertFile.readAll());
-//    QSslSocket::addDefaultCaCertificate(caCertificate);
     caCertFile.close();
 
     QFile clientCertFile(":/certificates/client.raSpBBerry");
@@ -22,8 +21,14 @@ MainWindow::MainWindow(QWidget *parent) :
     QSslCertificate clientCertificate(clientCertFile.readAll());
     clientCertFile.close();
 
+    QFile keyFile(":/certificates/privkey.key");
+    keyFile.open(QIODevice::ReadOnly);
+    QSslKey privateKey(keyFile.readAll(), QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey, QByteArray("raSpBBerry"));
+    keyFile.close();
+
     qDebug()<<caCertificate.issuerInfo(QSslCertificate::Organization);
     qDebug()<<clientCertificate.issuerInfo(QSslCertificate::Organization);
+    //    QSslSocket::addDefaultCaCertificate(caCertificate);
 
     // ****************************************************************
     // ** SETUP NETWORK ACCES RESOURCES (SSL CONFIG) ******************
@@ -33,10 +38,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(networkRequestSslError(QNetworkReply*,QList<QSslError>)));
 //    QNetworkRequest request(QUrl("https://google.com"));
     QNetworkRequest request(QUrl("https://pap10ds.spdns.de:8001/checkin/123445"));
-    request.sslConfiguration().setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.sslConfiguration().caCertificates().append(caCertificate);
-    request.sslConfiguration().setLocalCertificate(clientCertificate);
-    request.sslConfiguration().setProtocol(QSsl::AnyProtocol);
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setProtocol(QSsl::AnyProtocol);
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    sslConfig.setLocalCertificate(clientCertificate);
+    sslConfig.setPrivateKey(privateKey);
+    request.setSslConfiguration(sslConfig);
+    qDebug()<<request.sslConfiguration().localCertificate().issuerInfo(QSslCertificate::Organization);
     this->manager->get(request);
 
     // ****************************************************************

@@ -13,6 +13,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QSslConfiguration>
 #include <QtNetwork/QSslCertificate>
+#include <QtNetwork/QSslKey>
 
 namespace Ui {
 class MainWindow;
