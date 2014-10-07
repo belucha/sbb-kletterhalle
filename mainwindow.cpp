@@ -7,6 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    this->ui->lineEdit->grabKeyboard();
+
     // ****************************************************************
     // ** ADD SERVER CA CERTIFICATE ***********************************
     // ****************************************************************
@@ -50,8 +52,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->manager = new QNetworkAccessManager(this);
     connect(this->manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkRequestFinished(QNetworkReply*)));
     connect(this->manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(networkRequestSslError(QNetworkReply*,QList<QSslError>)));
-    QNetworkRequest request(QUrl("https://pap10ds.spdns.de:8001/checkin/123445"));
-    this->manager->get(request);
 
     // ****************************************************************
     // ** SCANNER STATE MACHINE CREATION ******************************
@@ -97,8 +97,11 @@ MainWindow::MainWindow(QWidget *parent) :
     addTimeoutTransition(this->sSInfoRequest, 150, this->sSInfoShow);
     addTimeoutTransition(this->sSInfoShow, 5000, this->sSEntryWaitForCode);
     this->sSInfoShow->addTransition(this->ui->pushButtonInfo, SIGNAL(clicked()), this->sSEntryWaitForCode);
+    connect(this->sSEntryRequest, SIGNAL(entered()), this, SLOT(requestAuthentification()));
 
-    addTimeoutTransition(this->sSEntryRequest, 150, this->sSEntryResponse); // TODO: exchange by real json request
+    this->sSEntryRequest->addTransition(this, SIGNAL(authentificationOk()), this->sSEntryResponse);
+    this->sSEntryRequest->addTransition(this, SIGNAL(authentificationFailed()), this->sSRequestError);
+    addTimeoutTransition(sSRequestError, 1500, sSEntryWaitForCode);
     this->sSEntryResponse->addTransition(this->sDoorUnlocked, SIGNAL(exited()), this->sSRestart);
     this->sSEntryResponse->addTransition(this->ui->pushButtonTicket, SIGNAL(clicked()), this->sSEntryBusy);
     this->sSEntryBusy->addTransition(this->sDoorUnlocked, SIGNAL(exited()), this->sSRestart);
@@ -146,15 +149,36 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::networkRequestFinished(QNetworkReply* reply)
+void MainWindow::requestAuthentification()
 {
-    qDebug()<<QString(reply->readAll());
+    QString url = QString("https://pap10ds.spdns.de:8001/checkin/%1").arg(this->ui->lineEdit->text());
+    qDebug()<<"requesting auth for: "<<url;
+    this->manager->get(QNetworkRequest(QUrl(url)));
+}
+
+void MainWindow::networkRequestFinished(QNetworkReply* reply)
+{        
+    if (reply->error()!=0)
+    {
+        this->ui->resultLabel->setText(reply->errorString());
+        emit authentificationFailed();
+        return;
+    }
+    QString json(reply->readAll());
+    this->ui->resultLabel->setText(json);
+    if (json.contains("\"alarm\"", Qt::CaseInsensitive))
+    {
+        emit authentificationOk();
+        return;
+    }
+    emit authentificationFailed();
 }
 
 void MainWindow::networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors)
 {
     Q_UNUSED(reply);
-    qDebug()<<errors;
+    Q_UNUSED(errors);
+    //qDebug()<<errors;
 }
 
 //

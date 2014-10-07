@@ -25,14 +25,19 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     static QSignalTransition* addTimeoutTransition(QState* sourceState, int msec, QAbstractState* destState);
-    ~MainWindow();
+    ~MainWindow();    
+signals:
+    void authentificationOk();
+    void authentificationFailed();
 private slots:
     void networkRequestFinished(QNetworkReply* reply);
     void networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors);
+    void requestAuthentification();
 private:
     Ui::MainWindow *ui;
     // network stuff
     QNetworkAccessManager* manager;
+    u_int32_t member;
     // door state machine releated objects
     QStateMachine* sDoorMachine;
     QState* sDoorBlocked;
