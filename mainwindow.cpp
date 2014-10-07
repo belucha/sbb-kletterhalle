@@ -11,6 +11,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // ** ADD SERVER CA CERTIFICATE ***********************************
     // ****************************************************************
 
+    /*
+     * http://qt-project.org/forums/viewthread/33388
+     * openssl pkcs12 -in client.p12 -clcerts -out client.raSpBBerry
+     * openssl pkcs12 -in client.p12 -nocerts -out privkey.key  (supply key
+     * openssl pkcs12 -in client.p12 -cacerts -out ca.raSpBBerry
+     *
+     */
     QFile caCertFile(":/certificates/ca.raSpBBerry");
     caCertFile.open(QIODevice::ReadOnly);
     QSslCertificate caCertificate(caCertFile.readAll());
@@ -26,9 +33,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QSslKey privateKey(keyFile.readAll(), QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey, QByteArray("raSpBBerry"));
     keyFile.close();
 
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setProtocol(QSsl::AnyProtocol);
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    sslConfig.setLocalCertificate(clientCertificate);
+    sslConfig.caCertificates().append(caCertificate);
+    sslConfig.setPrivateKey(privateKey);
+    QSslConfiguration::setDefaultConfiguration(sslConfig);
+
     qDebug()<<caCertificate.issuerInfo(QSslCertificate::Organization);
     qDebug()<<clientCertificate.issuerInfo(QSslCertificate::Organization);
-    //    QSslSocket::addDefaultCaCertificate(caCertificate);
 
     // ****************************************************************
     // ** SETUP NETWORK ACCES RESOURCES (SSL CONFIG) ******************
@@ -36,15 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->manager = new QNetworkAccessManager(this);
     connect(this->manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkRequestFinished(QNetworkReply*)));
     connect(this->manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(networkRequestSslError(QNetworkReply*,QList<QSslError>)));
-//    QNetworkRequest request(QUrl("https://google.com"));
     QNetworkRequest request(QUrl("https://pap10ds.spdns.de:8001/checkin/123445"));
-    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
-    sslConfig.setProtocol(QSsl::AnyProtocol);
-    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
-    sslConfig.setLocalCertificate(clientCertificate);
-    sslConfig.setPrivateKey(privateKey);
-    request.setSslConfiguration(sslConfig);
-    qDebug()<<request.sslConfiguration().localCertificate().issuerInfo(QSslCertificate::Organization);
     this->manager->get(request);
 
     // ****************************************************************
@@ -143,12 +149,11 @@ MainWindow::~MainWindow()
 void MainWindow::networkRequestFinished(QNetworkReply* reply)
 {
     qDebug()<<QString(reply->readAll());
-    qDebug()<<reply->errorString();
 }
 
 void MainWindow::networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors)
 {
-    qDebug()<<QString(reply->readAll());
+    Q_UNUSED(reply);
     qDebug()<<errors;
 }
 
