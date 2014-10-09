@@ -9,10 +9,10 @@ static void jsonTest(void)
     //****************************************************************************
     //* SAMPLE JSON PARSE
     //****************************************************************************
-    QString test = R"(
+    QString test = R"FooFoo(
       {
         "eid": 179,
-        "message": "Member was not checked out before! (last update at 2014-10-09 20:56:53) ",
+        "message": "Member was not checked out before! (last update at 2014-10-09 20:56:53)",
         "status": "service",
         "ticket": {
           "authorization": {
@@ -30,14 +30,16 @@ static void jsonTest(void)
         },
         "timestamp": "2014-10-09 20:59:48"
       }
-    )";
+    )FooFoo";
     std::string err;
     Json json = Json::parse(test.toStdString(), err);
     if (!err.empty()) {
         qDebug()<<QString("Failed: %1").arg(err.c_str());
     } else {
-        qDebug()<<QString("Status %1").arg(json["status"].dump().c_str());
-        qDebug()<<QString("Ticket.Valid: %1").arg(json["ticket"]["authorization"]["valid"].bool_value());
+        qDebug()<<QString("eid=%1").arg(json["eid"].int_value());
+        qDebug()<<QString("status=%1").arg(QString::fromStdString(json["status"].string_value()));
+        qDebug()<<QString("ticket.authorization.valid=%1").arg(json["ticket"]["authorization"]["valid"].bool_value());
+        qDebug()<<QString("ticket.authorization.mbn=%1").arg((long long int)json["ticket"]["authorization"]["mnb"].number_value());
     }
 }
 
