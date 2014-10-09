@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+using namespace json11;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -108,6 +109,8 @@ MainWindow::MainWindow(QWidget *parent) :
     addTimeoutTransition(this->sSEntryBusy, 1500, this->sSEntryResponse);   // show busy message for 1.5seconds
     this->sSRestart->addTransition(this->sSEntryWaitForCode);
 
+    this->sSEntryWaitForCode->assignProperty(this->ui->resultLabel, "text", "");
+
     // ****************************************************************
     // ** SHOW STATES AND ANIMATE PROPERTIES **************************
     // ****************************************************************
@@ -115,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->sDoorUnlocked->assignProperty(this->ui->labelStateDoor, "text", "door is free");
     this->sDoorAlarm->assignProperty(this->ui->labelStateDoor, "text", "alarm");
     this->sDoorEntry->assignProperty(this->ui->labelStateDoor, "text", "entry");
-    this->sDoorTicketUnused->assignProperty(this->ui->labelStateDoor, "text", "ticket was not used!");
+    this->sDoorTicketUnused->assignProperty(this->ui->labelStateDoor, "text", "ticket was not used!");    
 
     this->sSEntryWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "Please show your ticket!");
     this->sSInfoWaitForCode->assignProperty(this->ui->labelStateScanner, "text",  "info: Please show your ticket");
@@ -164,14 +167,28 @@ void MainWindow::networkRequestFinished(QNetworkReply* reply)
         emit authentificationFailed();
         return;
     }
-    QString json(reply->readAll());
-    this->ui->resultLabel->setText(json);
-    if (json.contains("\"alarm\"", Qt::CaseInsensitive))
-    {
-        emit authentificationOk();
+    QString jsonText(reply->readAll());
+    std::string err;
+    Json json = Json::parse(jsonText.toStdString(), err);
+    qDebug()<<jsonText;
+    if (!err.empty()) {
+        this->ui->resultLabel->setText("Authentication error! Server response is invalid!");
+        qDebug()<<QString("Invalid server response to %1:\n%2").arg(reply->url().url(), QString::fromStdString(err));
+        emit authentificationFailed();
         return;
     }
-    emit authentificationFailed();
+    this->ui->resultLabel->setText(QString::fromStdString(json["message"].string_value()));
+    QString status = QString::fromStdString(json["status"].string_value());
+    if (status=="success" || status=="service")
+    {
+        emit authentificationOk();
+    } else if (status=="alarm")
+    {
+        emit authentificationFailed();
+    } else {
+        qDebug()<<QString("Status: %1").arg(status);
+        emit authentificationFailed();
+    }
 }
 
 void MainWindow::networkRequestSslError(QNetworkReply* reply, const QList<QSslError>& errors)

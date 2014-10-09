@@ -14,6 +14,7 @@
 #include <QtNetwork/QSslConfiguration>
 #include <QtNetwork/QSslCertificate>
 #include <QtNetwork/QSslKey>
+#include "json11.hpp"
 
 namespace Ui {
 class MainWindow;

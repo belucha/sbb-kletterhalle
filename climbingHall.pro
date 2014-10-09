@@ -6,6 +6,8 @@
 
 QT       += core gui network
 
+QMAKE_CXXFLAGS+= -std=c++11
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = climbingHall
@@ -13,9 +15,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    json11.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    json11.hpp
 
 FORMS    += mainwindow.ui
 
