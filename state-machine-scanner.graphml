@@ -20,7 +20,7 @@
           <y:Geometry height="55.0" width="447.08000000000004" x="57.599999999999966" y="105.0"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="31.9375" modelName="custom" textColor="#000000" visible="true" width="105.994140625" x="170.5429296875" y="11.53125">S01
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="31.9375" modelName="custom" textColor="#000000" visible="true" width="105.994140625" x="170.54292968750002" y="11.53125">S01
 wait for bar code<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
@@ -106,7 +106,7 @@ RESTART<y:LabelModel>
           <y:Geometry height="55.0" width="108.00799999999998" x="259.99199999999996" y="316.5"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="92.7578125" x="7.625093749999962" y="4.546875">S06
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="92.7578125" x="7.625093750000019" y="4.546875">S06
 auth error
 show message<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -142,7 +142,7 @@ show ticket info<y:LabelModel>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="92.7578125" x="16.17709375000004" y="4.546875">S04
-door unlocked
+busy
 show message<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
@@ -154,7 +154,6 @@ show message<y:LabelModel>
       </data>
     </node>
     <node id="n8">
-      <data key="d5"/>
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.userMessage">
           <y:Geometry height="40.0" width="125.1120000000002" x="619.1519999999998" y="268.61320000000023"/>
@@ -428,7 +427,6 @@ UNLOCK_DOOR<y:LabelModel>
       </data>
     </edge>
     <edge id="e14" source="n3" target="n8">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="51.729600000000175" sy="3.2052000000000476" tx="-16.33439999999962" ty="0.0">
